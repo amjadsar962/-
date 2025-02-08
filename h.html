@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حجز موعد</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .appointments {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            width: 300px;
+            margin: 0 auto;
+        }
+        .appointment {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>حجز موعد في عيادة الدكتور سالم</h1>
+
+    <div>
+        <label for="name">اسم المريض:</label><br>
+        <input type="text" id="name"><br><br>
+
+        <label for="age">عمر الطفل:</label><br>
+        <input type="number" id="age"><br><br>
+
+        <label for="contact">معلومات الاتصال:</label><br>
+        <input type="text" id="contact"><br><br>
+
+        <label for="date">تاريخ الموعد:</label><br>
+        <input type="date" id="date"><br><br>
+
+        <label for="time">وقت الموعد:</label><br>
+        <input type="time" id="time"><br><br>
+
+        <button onclick="saveAppointment()">حفظ الموعد</button>
+    </div>
+
+    <div class="appointments">
+        <h3>المواعيد المحفوظة:</h3>
+        <div id="appointments-list"></div>
+    </div>
+
+    <script>
+        // دالة لحفظ الموعد في LocalStorage
+        function saveAppointment() {
+            let name = document.getElementById("name").value;
+            let age = document.getElementById("age").value;
+            let contact = document.getElementById("contact").value;
+            let date = document.getElementById("date").value;
+            let time = document.getElementById("time").value;
+
+            if (name && age && contact && date && time) {
+                let appointment = {
+                    name: name,
+                    age: age,
+                    contact: contact,
+                    date: date,
+                    time: time
+                };
+
+                // حفظ المواعيد في LocalStorage
+                let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
+                appointments.push(appointment);
+                localStorage.setItem("appointments", JSON.stringify(appointments));
+
+                // تحديث عرض المواعيد
+                displayAppointments();
+            } else {
+                alert("الرجاء ملء جميع الحقول.");
+            }
+        }
+
+        // دالة لعرض المواعيد المحفوظة
+        function displayAppointments() {
+            let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
+            let appointmentsList = document.getElementById("appointments-list");
+            appointmentsList.innerHTML = '';
+
+            appointments.forEach(function(appointment, index) {
+                appointmentsList.innerHTML += `
+                    <div class="appointment">
+                        <strong>${appointment.name}</strong> - ${appointment.date} at ${appointment.time}<br>
+                        عمر الطفل: ${appointment.age}, معلومات الاتصال: ${appointment.contact}
+                    </div>
+                `;
+            });
+        }
+
+        // عند تحميل الصفحة، نعرض المواعيد المحفوظة
+        window.onload = function() {
+            displayAppointments();
+        }
+    </script>
+
+</body>
+</html>
