@@ -1,0 +1,254 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Dr. Salem Al Sarayra - Pediatric Dentistry',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      home: HomeScreen(),
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Dr. Salem Al Sarayra Clinics'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ClinicCard(
+              clinicName: 'Sarah Al-Qassim',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AppointmentScreen(clinicName: 'Sarah Al-Qassim'),
+                  ),
+                );
+              },
+            ),
+            SizedBox(height: 20),
+            ClinicCard(
+              clinicName: 'Raya',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AppointmentScreen(clinicName: 'Raya'),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ClinicCard extends StatelessWidget {
+  final String clinicName;
+  final VoidCallback onTap;
+
+  ClinicCard({required this.clinicName, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: EdgeInsets.all(16),
+          width: double.infinity,
+          child: Column(
+            children: [
+              Text(
+                clinicName,
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10),
+              Icon(
+                Icons.medical_services,
+                size: 50,
+                color: Colors.blue,
+              ),
+              SizedBox(height: 10),
+              Text('Click to book an appointment', textAlign: TextAlign.center),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AppointmentScreen extends StatefulWidget {
+  final String clinicName;
+
+  AppointmentScreen({required this.clinicName});
+
+  @override
+  _AppointmentScreenState createState() => _AppointmentScreenState();
+}
+
+class _AppointmentScreenState extends State<AppointmentScreen> {
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
+  final TextEditingController _patientNameController = TextEditingController();
+  final TextEditingController _childAgeController = TextEditingController();
+  final TextEditingController _patientContactController = TextEditingController();
+
+  // قائمة لتخزين المواعيد محليًا
+  List<Map<String, String>> _appointments = [];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('${widget.clinicName} - Book an Appointment'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Select an appointment date:', style: TextStyle(fontSize: 18)),
+              ListTile(
+                title: Text('${_selectedDate.toLocal()}'.split(' ')[0]),
+                onTap: _selectDate,
+                trailing: Icon(Icons.calendar_today),
+              ),
+              SizedBox(height: 20),
+              Text('Select appointment time:', style: TextStyle(fontSize: 18)),
+              ListTile(
+                title: Text('${_selectedTime.format(context)}'),
+                onTap: _selectTime,
+                trailing: Icon(Icons.access_time),
+              ),
+              SizedBox(height: 20),
+              Text('Enter patient details:', style: TextStyle(fontSize: 18)),
+              TextField(
+                controller: _patientNameController,
+                decoration: InputDecoration(labelText: 'Patient Name'),
+              ),
+              TextField(
+                controller: _childAgeController,
+                decoration: InputDecoration(labelText: 'Child\'s Age'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: _patientContactController,
+                decoration: InputDecoration(labelText: 'Contact Information'),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  _saveAppointment();
+                },
+                child: Text('Confirm Appointment'),
+              ),
+              SizedBox(height: 20),
+              Text('Upcoming Appointments:', style: TextStyle(fontSize: 18)),
+              _buildAppointmentsList(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2025),
+    );
+    if (picked != null && picked != _selectedDate)
+      setState(() {
+        _selectedDate = picked;
+      });
+  }
+
+  Future<void> _selectTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    );
+    if (picked != null && picked != _selectedTime)
+      setState(() {
+        _selectedTime = picked;
+      });
+  }
+
+  void _saveAppointment() {
+    setState(() {
+      _appointments.add({
+        'name': _patientNameController.text,
+        'age': _childAgeController.text,
+        'contact': _patientContactController.text,
+        'date': _selectedDate.toLocal().toString().split(' ')[0],
+        'time': _selectedTime.format(context),
+      });
+    });
+
+    _showConfirmationDialog();
+  }
+
+  Widget _buildAppointmentsList() {
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: _appointments.length,
+      itemBuilder: (context, index) {
+        var appointment = _appointments[index];
+
+        return ListTile(
+          title: Text('${appointment['name']} - ${appointment['date']} at ${appointment['time']}'),
+          subtitle: Text('Age: ${appointment['age']} - Contact: ${appointment['contact']}'),
+        );
+      },
+    );
+  }
+
+  void _showConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Appointment Confirmed'),
+          content: Text(
+            'Your appointment is booked for ${_selectedDate.toLocal().toString().split(' ')[0]} at ${_selectedTime.format(context)}\n\nPatient: ${_patientNameController.text}\nChild\'s Age: ${_childAgeController.text}\nContact: ${_patientContactController.text}',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
